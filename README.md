@@ -56,7 +56,7 @@ Additionally, the application supports exporting stored data as **Excel** and **
 ## Screenshots
 _Sample image of the application_
 
-![Application Screenshot](path/to/image.png)
+![Application Screenshot](images-readme/image.png)
 
 ## Contributing
 Feel free to fork this repository, create a feature branch, and submit a pull request. Contributions are welcome!
