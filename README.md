@@ -35,6 +35,7 @@ Additionally, the application supports exporting stored data as **Excel** and **
    spring.datasource.url=jdbc:postgresql://localhost:5432/your_database
    spring.datasource.username=your_username
    spring.datasource.password=your_password
+   spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
    spring.jpa.hibernate.ddl-auto=update
    ```
 3. **Build and Run the Application:**
