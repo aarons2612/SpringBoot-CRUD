@@ -1,5 +1,6 @@
 package com.postgresql.demo.services;
 
+import com.postgresql.demo.exceptions.PersonNotFoundException;
 import com.postgresql.demo.model.Demo;
 import com.postgresql.demo.repo.DemoRepo;
 
@@ -10,9 +11,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import java.io.ByteArrayOutputStream;
 
 import java.io.IOException;
@@ -34,9 +33,9 @@ public class DemoService {
         return repo.findAll();
     }
 
-    public Demo getPersonById(Long id) {
+        public Demo getPersonById(Long id) {
         return repo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found with id: " + id));
+                .orElseThrow(() -> new PersonNotFoundException("Person not found with ID: " + id));
     }
 
     public Demo updatePerson(Long id, Demo personDetails) {
@@ -44,12 +43,12 @@ public class DemoService {
             person.setName(personDetails.getName());
             person.setEmail(personDetails.getEmail());
             return repo.save(person);
-        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found with id: " + id));
+        }).orElseThrow(() -> new PersonNotFoundException("Person not found with ID: " + id));
     }
 
     public void deletePerson(Long id) {
         Demo person = repo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found with id: " + id));
+                .orElseThrow(() -> new PersonNotFoundException("Person not found with ID: " + id));
         repo.delete(person);
     }
     public byte[] generateExcel() throws IOException {
