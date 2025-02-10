@@ -63,4 +63,15 @@ public class DemoController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfData);
     }
+    
+    @GetMapping("/preview-pdf")
+    public ResponseEntity<byte[]> previewPdf() throws IOException {
+        byte[] pdfData = service.generatePdf();
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=preview.pdf") // Inline to preview
+                .body(pdfData);
+    }
+
     }

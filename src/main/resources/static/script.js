@@ -128,8 +128,13 @@ document.getElementById("downloadExcel").addEventListener("click", function () {
 });
 
 document.getElementById("downloadPdf").addEventListener("click", function () {
-    window.location.href = "/api/persons/download/pdf"; // Backend API for PDF
+    //window.location.href = "/api/persons/download/pdf"; // Backend API for PDF
+    fetch("/api/persons/preview-pdf")
+        .then(response => response.blob())
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+        });
 });
-
 
 fetchPersons();
