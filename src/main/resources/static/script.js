@@ -6,11 +6,10 @@ function showPopupMessage(message, type = "success") {
     popup.className = `popup-message ${type}`;
     popup.textContent = message;
     document.body.appendChild(popup);
-    setTimeout(() => {
-        popup.remove();
-    }, 3000);
+    setTimeout(() => popup.remove(), 3000);
 }
 
+// Ensure styles are loaded dynamically
 document.addEventListener("DOMContentLoaded", () => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
@@ -19,83 +18,100 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function fetchPersons() {
-    const response = await fetch(apiBaseUrl);
-    const persons = await response.json();
-    const list = document.getElementById("personList");
-    list.innerHTML = "";
-    const existingEmails = new Set();
-    persons.sort((a, b) => a.name.localeCompare(b.name));
-    persons.forEach(person => {
-        if (existingEmails.has(person.email)) return;
-        existingEmails.add(person.email);
-        const li = document.createElement("li");
-        li.innerHTML = `
-            <div class="person-info">
-                <strong>${person.name}</strong> <br> ${person.email}
-            </div>
-            <div>
-                <button class="edit" onclick="editPerson(${person.id}, '${person.name}', '${person.email}')">Edit</button>
-                <button class="delete" onclick="deletePerson(${person.id})">Delete</button>
-            </div>
-        `;
-        list.appendChild(li);
-    });
-    return existingEmails;
+    try {
+        const response = await fetch(apiBaseUrl);
+        if (!response.ok) throw new Error("Failed to fetch persons");
+
+        const persons = await response.json();
+        const list = document.getElementById("personList");
+        list.innerHTML = "";
+        const existingEmails = new Set();
+
+        persons.sort((a, b) => a.name.localeCompare(b.name));
+
+        persons.forEach(({ id, name, email }) => {
+            if (existingEmails.has(email)) return;
+            existingEmails.add(email);
+
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <div class="person-info">
+                    <strong>${name}</strong> <br> ${email}
+                </div>
+                <div>
+                    <button class="edit" onclick="editPerson(${id}, '${name}', '${email}')">Edit</button>
+                    <button class="delete" onclick="deletePerson(${id})">Delete</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+
+        return existingEmails;
+    } catch (error) {
+        console.error(error);
+        showPopupMessage("Error fetching persons", "error");
+    }
 }
 
-document.getElementById("addPersonForm").addEventListener("submit", async function(event) {
+document.getElementById("addPersonForm").addEventListener("submit", async function (event) {
     event.preventDefault();
-    const name = document.getElementById("name").value;
-    const email = document.getElementById("email").value;
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+
     const namePattern = /^[A-Za-z\s]+$/;
     if (!name || !namePattern.test(name)) {
-        showPopupMessage("Name must contain only letters and spaces.", "error");
-        return;
+        return showPopupMessage("Name must contain only letters and spaces.", "error");
     }
-    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z.]+\.[a-zA-Z]{2,6}$/;
+
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!email || !emailPattern.test(email)) {
-        showPopupMessage("Please enter a valid email address.", "error");
-        return;
+        return showPopupMessage("Please enter a valid email address.", "error");
     }
-    const existingEmails = await fetchPersons();
-    if (existingEmails.has(email) && editingPersonId === null) {
-        showPopupMessage("Email already exists.", "error");
-        return;
-    } else if (existingEmails.has(email) && editingPersonId !== null) {
-        const currentPerson = await fetch(`${apiBaseUrl}/${editingPersonId}`);
-        const personData = await currentPerson.json();
-        if (email !== personData.email) {
-            showPopupMessage("Email already exists.", "error");
-            return;
+
+    try {
+        const existingEmails = await fetchPersons();
+
+        if (existingEmails.has(email) && editingPersonId === null) {
+            return showPopupMessage("Email already exists.", "error");
         }
-    }
-    if (editingPersonId === null) {
-        const response = await fetch(apiBaseUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email })
-        });
-        if (response.ok) {
-            document.getElementById("addPersonForm").reset();
-            fetchPersons();
-            showPopupMessage("Person added successfully");
+
+        if (editingPersonId === null) {
+            const response = await fetch(apiBaseUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email })
+            });
+
+            if (response.ok) {
+                document.getElementById("addPersonForm").reset();
+                await fetchPersons();
+                showPopupMessage("Person added successfully");
+            } else {
+                showPopupMessage("Error adding person", "error");
+            }
         } else {
-            showPopupMessage("Error adding person", "error");
+            await updatePerson(editingPersonId, name, email);
         }
-    } else {
-        updatePerson(editingPersonId, name, email);
+    } catch (error) {
+        console.error(error);
+        showPopupMessage("An error occurred.", "error");
     }
 });
 
 async function deletePerson(id) {
-    if (confirm("Are you sure you want to delete this person?")) {
+    if (!confirm("Are you sure you want to delete this person?")) return;
+
+    try {
         const response = await fetch(`${apiBaseUrl}/${id}`, { method: "DELETE" });
         if (response.ok) {
-            fetchPersons();
+            await fetchPersons();
             showPopupMessage("Person deleted successfully");
         } else {
             showPopupMessage("Error deleting person", "error");
         }
+    } catch (error) {
+        console.error(error);
+        showPopupMessage("An error occurred.", "error");
     }
 }
 
@@ -104,37 +120,60 @@ function editPerson(id, name, email) {
     document.getElementById("email").value = email;
     editingPersonId = id;
     document.getElementById("submitButton").textContent = "Update Person";
-}
 
-async function updatePerson(id, name, email) {
-    const response = await fetch(`${apiBaseUrl}/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email })
-    });
-    if (response.ok) {
-        editingPersonId = null;
-        document.getElementById("addPersonForm").reset();
-        document.getElementById("submitButton").textContent = "Add Person";
-        fetchPersons();
-        showPopupMessage("Person updated successfully");
-    } else {
-        showPopupMessage("Error updating person", "error");
+    const cancelBtn = document.getElementById("cancelEdit");
+    if (!cancelBtn) {
+        const button = document.createElement("button");
+        button.id = "cancelEdit";
+        button.textContent = "Cancel";
+        button.addEventListener("click", resetForm);
+        document.getElementById("formButtons").appendChild(button);
     }
 }
 
-document.getElementById("downloadExcel").addEventListener("click", function () {
-    window.location.href = "/api/persons/download"; // Backend API for Excel
-});
+function resetForm() {
+    editingPersonId = null;
+    document.getElementById("addPersonForm").reset();
+    document.getElementById("submitButton").textContent = "Add Person";
+    const cancelBtn = document.getElementById("cancelEdit");
+    if (cancelBtn) cancelBtn.remove();
+}
 
-document.getElementById("downloadPdf").addEventListener("click", function () {
-    //window.location.href = "/api/persons/download/pdf"; // Backend API for PDF
-    fetch("/api/persons/preview-pdf")
-        .then(response => response.blob())
-        .then(blob => {
-            const url = URL.createObjectURL(blob);
-            window.open(url, "_blank");
+async function updatePerson(id, name, email) {
+    try {
+        const response = await fetch(`${apiBaseUrl}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email })
         });
+
+        if (response.ok) {
+            resetForm();
+            await fetchPersons();
+            showPopupMessage("Person updated successfully");
+        } else {
+            showPopupMessage("Error updating person", "error");
+        }
+    } catch (error) {
+        console.error(error);
+        showPopupMessage("An error occurred.", "error");
+    }
+}
+
+// Excel and PDF downloads
+document.getElementById("downloadExcel").addEventListener("click", () => {
+    window.location.href = "/api/persons/download";
 });
 
+document.getElementById("downloadPdf").addEventListener("click", async () => {
+    try {
+        const response = await fetch("/api/persons/preview-pdf");
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+    } catch (error) {
+        console.error(error);
+        showPopupMessage("Error downloading PDF", "error");
+    }
+});
 fetchPersons();

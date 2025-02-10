@@ -63,7 +63,6 @@ public class DemoController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfData);
     }
-    
     @GetMapping("/preview-pdf")
     public ResponseEntity<byte[]> previewPdf() throws IOException {
         byte[] pdfData = service.generatePdf();
