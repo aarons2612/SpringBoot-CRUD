@@ -1,10 +1,11 @@
 package com.postgresql.demo.controller;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import com.postgresql.demo.model.Demo;
 import com.postgresql.demo.services.DemoService;
+import com.postgresql.demo.services.TemporalService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,34 +19,58 @@ public class DemoController {
     @Autowired
     private DemoService service;
 
-    @PostMapping
-    public ResponseEntity<Demo> addPerson(@RequestBody Demo person) {
-        return ResponseEntity.ok(service.addPerson(person));
-    }
+    @Autowired
+    private TemporalService temporalService; // Temporal service to start workflow
 
+    /**
+     * Add a new person and start the Temporal workflow.
+     */
+    @PostMapping
+public ResponseEntity<String> addPerson(@RequestBody Demo person) {
+    temporalService.startPersonWorkflow(person);  // 🔹 Start workflow with person data
+    return ResponseEntity.ok("Workflow started for person: " + person.getName());
+}
+
+
+    /**
+     * Retrieve all persons.
+     */
     @GetMapping
     public ResponseEntity<List<Demo>> getAllPersons() {
         return ResponseEntity.ok(service.getAllPersons());
     }
 
+    /**
+     * Retrieve a person by ID.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Demo> getPersonById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getPersonById(id));
     }
 
+    /**
+     * Update person details.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<Demo> updatePerson(@PathVariable Long id, @RequestBody Demo personDetails) {
         return ResponseEntity.ok(service.updatePerson(id, personDetails));
     }
 
+    /**
+     * Delete a person.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePerson(@PathVariable Long id) {
         service.deletePerson(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Download all persons data as an Excel file.
+     */
     @GetMapping("/download")
     public ResponseEntity<byte[]> downloadExcel() throws IOException {
-        byte[] excelData = service.generateExcel(); // Use 'service' instead of 'demoService'
+        byte[] excelData = service.generateExcel();
         String filename = service.generateFilename();
 
         return ResponseEntity.ok()
@@ -53,6 +78,10 @@ public class DemoController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(excelData);
     }
+
+    /**
+     * Download all persons data as a PDF file.
+     */
     @GetMapping("/download/pdf")
     public ResponseEntity<byte[]> downloadPdf() throws IOException {
         byte[] pdfData = service.generatePdf();
@@ -63,14 +92,17 @@ public class DemoController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfData);
     }
+
+    /**
+     * Preview the generated PDF inline.
+     */
     @GetMapping("/preview-pdf")
     public ResponseEntity<byte[]> previewPdf() throws IOException {
         byte[] pdfData = service.generatePdf();
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=preview.pdf") // Inline to preview
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=preview.pdf") // Inline preview
                 .body(pdfData);
     }
-
-    }
+}
