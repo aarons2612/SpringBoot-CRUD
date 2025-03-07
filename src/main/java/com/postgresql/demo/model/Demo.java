@@ -14,6 +14,7 @@ public class Demo {
     private Long id;
 
     private String name;
+    @Column(unique = true)
     private String email;
 
     // public Demo() {}

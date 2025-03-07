@@ -25,10 +25,6 @@ public class DemoService {
     @Autowired
     private DemoRepo repo;
 
-    public Demo addPerson(Demo person) {
-        return repo.save(person);
-    }
-
     public List<Demo> getAllPersons() {
         return repo.findAll();
     }

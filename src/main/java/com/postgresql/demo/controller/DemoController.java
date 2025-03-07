@@ -26,12 +26,18 @@ public class DemoController {
      * Add a new person and start the Temporal workflow.
      */
     @PostMapping
-public ResponseEntity<String> addPerson(@RequestBody Demo person) {
-    temporalService.startPersonWorkflow(person);  // 🔹 Start workflow with person data
-    return ResponseEntity.ok("Workflow started for person: " + person.getName());
-}
-
-
+    public ResponseEntity<String> addPerson(@RequestBody Demo person) {
+        String workflowId = temporalService.startPersonWorkflow(person); // ✅ Start workflow
+    
+        Long personId = temporalService.getPersonId(workflowId); // ✅ Wait & get stored ID
+    
+        if (personId == null) {
+            return ResponseEntity.status(500).body("Person ID not found after waiting.");
+        }
+    
+        return ResponseEntity.ok("Workflow completed. Person ID: " + personId);
+    }
+    
     /**
      * Retrieve all persons.
      */

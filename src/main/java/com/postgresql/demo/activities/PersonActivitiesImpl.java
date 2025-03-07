@@ -17,8 +17,15 @@ public class PersonActivitiesImpl implements PersonActivities {
     @Override
     public Demo addPerson(Demo person) {
         System.out.println("Adding person to database: " + person.getName());
+
+        // ✅ Check if email already exists before saving
+        if (repo.existsByEmail(person.getEmail())) {
+            throw new RuntimeException("Email already exists!");
+        }
+
         return repo.save(person);
     }
+
 
     @Override
     public void validatePerson(Long personId) {
