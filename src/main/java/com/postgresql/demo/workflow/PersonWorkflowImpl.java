@@ -11,32 +11,30 @@ public class PersonWorkflowImpl implements PersonWorkflow {
     private final PersonActivities activities = Workflow.newActivityStub(
             PersonActivities.class,
             ActivityOptions.newBuilder()
-                    .setStartToCloseTimeout(Duration.ofSeconds(30)) 
+                    .setStartToCloseTimeout(Duration.ofSeconds(30))
                     .build()
     );
 
-    private Long savedPersonId;
+    private Long savedPersonId; // ✅ This is now properly updated
 
     @Override
-    public void processPerson(Demo person) {
+    public Demo processPerson(Demo person) {
         Demo savedPerson = activities.addPerson(person); // ✅ Store in DB
-        this.savedPersonId = savedPerson.getId(); // ✅ Assign ID before query
-
-        System.out.println("Workflow started for person ID: " + savedPersonId);
+        System.out.println("Workflow started for person ID: " + savedPerson.getId());
 
         // Workflow logic
-        activities.validatePerson(savedPersonId);
-        activities.processPersonData(savedPersonId);
-        activities.sendNotification(savedPersonId);
+        activities.validatePerson(savedPerson.getId());
+        activities.processPersonData(savedPerson.getId());
+        activities.sendNotification(savedPerson.getId());
 
-        System.out.println("Workflow completed for person ID: " + savedPersonId);
+        System.out.println("Workflow completed for person ID: " + savedPerson.getId());
+
+        return savedPerson;
     }
 
-    @Override
-    public Long getPersonId() {
-        while (savedPersonId == null) { // Wait for ID to be set
-            Workflow.sleep(500); // Small delay to avoid busy waiting
-        }
-        return savedPersonId;
-    }
+    // @Override
+    // public Long updatePersonId() {
+    //     return this.savedPersonId;  // ✅ Returns person ID when called
+    // }
 }
+

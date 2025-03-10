@@ -3,6 +3,7 @@ package com.postgresql.demo.workflow;
 import com.postgresql.demo.model.Demo;
 
 import io.temporal.workflow.QueryMethod;
+import io.temporal.workflow.UpdateMethod;
 import io.temporal.workflow.WorkflowInterface;
 import io.temporal.workflow.WorkflowMethod;
 
@@ -10,9 +11,11 @@ import io.temporal.workflow.WorkflowMethod;
 public interface PersonWorkflow {
 
     @WorkflowMethod
-    void processPerson(Demo person);
+    Demo processPerson(Demo person);
 
-    @QueryMethod
-    Long getPersonId();
-    
+    // @QueryMethod
+    // Long getPersonId();
+
+    // @UpdateMethod
+    // Long updatePersonId(); 
 }
