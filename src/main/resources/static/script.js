@@ -176,4 +176,10 @@ document.getElementById("downloadPdf").addEventListener("click", async () => {
         showPopupMessage("Error downloading PDF", "error");
     }
 });
+
+function logout() {
+    window.location.href = "/logout";
+}
+
+
 fetchPersons();

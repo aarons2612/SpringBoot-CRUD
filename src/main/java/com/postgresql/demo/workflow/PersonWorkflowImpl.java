@@ -5,6 +5,9 @@ import com.postgresql.demo.model.Demo;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.workflow.Workflow;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 
 public class PersonWorkflowImpl implements PersonWorkflow {
 
@@ -15,22 +18,28 @@ public class PersonWorkflowImpl implements PersonWorkflow {
                     .build()
     );
 
-    private Long savedPersonId; // ✅ This is now properly updated
+    // private Long savedPersonId; // ✅ This is now properly updated
 
-    @Override
-    public Demo processPerson(Demo person) {
-        Demo savedPerson = activities.addPerson(person); // ✅ Store in DB
-        System.out.println("Workflow started for person ID: " + savedPerson.getId());
+public Demo processPerson(Demo person) {
+    LocalDateTime now = LocalDateTime.now();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    // System.out.println("\nBefore workflow time:  " + now.format(formatter));
+    Demo savedPerson = activities.addPerson(person); // ✅ Store in DB
 
-        // Workflow logic
-        activities.validatePerson(savedPerson.getId());
-        activities.processPersonData(savedPerson.getId());
-        activities.sendNotification(savedPerson.getId());
+    System.out.println("Workflow started for person ID: " + savedPerson.getId());
+    System.out.println("\nAfter workflow time: " + now.format(formatter));
 
-        System.out.println("Workflow completed for person ID: " + savedPerson.getId());
+    // Workflow logic
+    activities.validatePerson(savedPerson.getId());
+    activities.processPersonData(savedPerson.getId());
+    activities.sendNotification(savedPerson.getId());
 
-        return savedPerson;
-    }
+    System.out.println("Workflow completed for person ID: " + savedPerson.getId());
+    System.out.println("\nreturn time: " + now.format(formatter));
+
+    return savedPerson;
+}
+
 
     // @Override
     // public Long updatePersonId() {

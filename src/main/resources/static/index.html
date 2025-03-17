@@ -1,37 +1,22 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo Application</title>
+    <title>Home - Demo Application</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Demo Application</h1>
-    <div class="container">
-
-        <section class="left-section">
-            <h1>Enter your Details</h1>
-            <form id="addPersonForm">
-                <input type="text" id="name" placeholder="Enter Name" required>
-                <input type="email" id="email" placeholder="Enter Email" required>
-                <button type="submit" id="submitButton">Add Person</button>
-            </form>
-        </section>
-        
-        <section class="right-section">
-            <div class="dropdown">
-                <button id="downloadButton">Download ▼</button>
-                <div class="dropdown-content">
-                    <a href="#" id="downloadExcel">Excel</a>
-                    <a href="#" id="downloadPdf">PDF</a>
-                </div>
-            </div>
-            <h2>Person List</h2>
-            <ul id="personList"></ul>
-        </section>
+    <div class="container1">
+        <h1>Welcome to the Demo Application</h1>
+        <p>Please log in to continue</p>
+        <button id="loginButton">Login</button>
     </div>
 
-    <script src="script.js"></script>
-
+    <script>
+        document.getElementById("loginButton").addEventListener("click", function() {
+            window.location.href = "http://localhost:8090/oauth2/authorization/zitadel"; // Redirect to ZITADEL login
+        });
+    </script>
 </body>
 </html>
